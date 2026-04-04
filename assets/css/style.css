@@ -1,0 +1,461 @@
+/**
+ * Estilos Personalizados
+ * Estructuras y Remodelaciones Orellana
+ */
+
+/* ============================================
+   VARIABLES Y CONFIGURACIÓN GENERAL
+   ============================================ */
+:root {
+    --primary-color: #1e3a5f;
+    --secondary-color: #2d5a87;
+    --accent-color: #f39c12;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --light-bg: #f8f9fa;
+    --dark-bg: #212529;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   NAVEGACIÓN
+   ============================================ */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+.dropdown-menu {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* ============================================
+   TARJETAS Y CONTENEDORES
+   ============================================ */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+.card-header {
+    font-weight: 600;
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   TABLAS
+   ============================================ */
+.table {
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.04);
+}
+
+/* ============================================
+   BADGES Y ESTADOS
+   ============================================ */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* ============================================
+   FORMULARIOS
+   ============================================ */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 135, 0.25);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--danger-color);
+}
+
+/* ============================================
+   DASHBOARD CARDS
+   ============================================ */
+.dashboard-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.dashboard-card .card-body {
+    padding: 1.5rem;
+}
+
+.dashboard-card .card-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.dashboard-card .card-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.dashboard-card .card-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Colores para dashboard cards */
+.card-primary-gradient {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    color: white;
+}
+
+.card-success-gradient {
+    background: linear-gradient(135deg, #198754, #146c43);
+    color: white;
+}
+
+.card-warning-gradient {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #212529;
+}
+
+.card-danger-gradient {
+    background: linear-gradient(135deg, #dc3545, #b02a37);
+    color: white;
+}
+
+.card-info-gradient {
+    background: linear-gradient(135deg, #0dcaf0, #0aa2c0);
+    color: #212529;
+}
+
+/* ============================================
+   ALERTAS
+   ============================================ */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+/* ============================================
+   STOCK BAJO ALERTA
+   ============================================ */
+.stock-low {
+    background-color: #fff3cd;
+    border-left: 4px solid var(--warning-color);
+}
+
+.stock-critical {
+    background-color: #f8d7da;
+    border-left: 4px solid var(--danger-color);
+}
+
+/* ============================================
+   FACTURA IMPRESIÓN
+   ============================================ */
+.invoice-container {
+    background: white;
+    padding: 2rem;
+    max-width: 210mm;
+    margin: 0 auto;
+}
+
+.invoice-header {
+    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.invoice-logo {
+    max-width: 100px;
+    max-height: 100px;
+}
+
+.invoice-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.invoice-details {
+    margin-bottom: 1.5rem;
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.invoice-table th,
+.invoice-table td {
+    border: 1px solid #333;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.invoice-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.invoice-totals {
+    margin-top: 1rem;
+    text-align: right;
+}
+
+.invoice-signature {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.signature-line {
+    border-top: 1px solid #333;
+    width: 250px;
+    margin: 3rem auto 0.5rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .navbar-brand span {
+        display: none;
+    }
+    
+    .dashboard-card .card-value {
+        font-size: 1.5rem;
+    }
+    
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .btn-group-responsive {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    .btn-group-responsive .btn {
+        flex: 1 1 auto;
+        min-width: 100px;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .dashboard-card .card-body {
+        padding: 1rem;
+    }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.rounded-custom {
+    border-radius: 0.5rem;
+}
+
+/* Animación de carga */
+.loading-spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   ESTILOS DE IMPRESIÓN
+   ============================================ */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    .invoice-container,
+    .invoice-container * {
+        visibility: visible;
+    }
+    
+    .invoice-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 1rem;
+        box-shadow: none;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    a[href]:after {
+        content: none !important;
+    }
+    
+    .btn,
+    .navbar,
+    .footer,
+    .dropdown-menu {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   HERRAMIENTAS PRESTADAS
+   ============================================ */
+.tool-status-available {
+    color: var(--success-color);
+}
+
+.tool-status-loaned {
+    color: var(--info-color);
+}
+
+.tool-status-maintenance {
+    color: var(--warning-color);
+}
+
+.tool-status-damaged,
+.tool-status-lost {
+    color: var(--danger-color);
+}
+
+/* ============================================
+   PROGRESS BARS
+   ============================================ */
+.progress {
+    height: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+/* ============================================
+   LIST GROUP CUSTOM
+   ============================================ */
+.list-group-item-action:hover {
+    background-color: var(--light-bg);
+}
+
+/* ============================================
+   MODAL CUSTOM
+   ============================================ */
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* ============================================
+   PAGINACIÓN
+   ============================================ */
+.pagination .page-link {
+    color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
