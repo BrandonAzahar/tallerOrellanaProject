@@ -100,7 +100,7 @@ $loans = $stmt->fetchAll();
                                 </td>
                                 <td>
                                     <?php if ($loan['status'] === 'active'): ?>
-                                        <a href="return.php?id=<?php echo base64_encode($loan['id']); ?>" 
+                                        <a href="return.php?id=<?php echo encryptId($loan['id']); ?>" 
                                            class="btn btn-sm btn-success">
                                             <i class="bi bi-check-circle"></i> Devolver
                                         </a>

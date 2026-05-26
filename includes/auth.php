@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/audit_utils.php';
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -150,13 +151,19 @@ function login($user) {
         $sql = "UPDATE users SET last_login = NOW() WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->execute([$user['id']]);
+
+        // Registrar en logs de auditoría
+        logAudit($conn, 'login', 'auth', null, 'users', null, [
+            'username' => $user['username'],
+            'role' => $user['role']
+        ]);
     } catch (PDOException $e) {
         // No fallar el login si no se puede actualizar el último login
         if (DEBUG_MODE) {
             error_log("Error actualizando last_login: " . $e->getMessage());
         }
     }
-    
+
     return true;
 }
 
@@ -164,9 +171,22 @@ function login($user) {
  * Cerrar sesión
  */
 function logout() {
+    // Registrar en logs de auditoría antes de destruir sesión
+    try {
+        if (isset($_SESSION['user_id']) && $_SESSION['user_logged_in']) {
+            $conn = getDbConnection();
+            logAudit($conn, 'logout', 'auth', null, 'users', null, [
+                'user_id' => $_SESSION['user_id'],
+                'username' => $_SESSION['username'] ?? 'unknown'
+            ]);
+        }
+    } catch (PDOException $e) {
+        // No fallar logout si falla el log
+    }
+
     // Limpiar todas las variables de sesión
     $_SESSION = array();
-    
+
     // Borrar la cookie de sesión
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
@@ -180,7 +200,7 @@ function logout() {
             $params["httponly"]
         );
     }
-    
+
     // Destruir la sesión
     session_destroy();
 }

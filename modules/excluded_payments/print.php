@@ -9,13 +9,14 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/audit_utils.php';
 
 $conn = getDbConnection();
 
-// Obtener ID y decodificar
-$id = isset($_GET['id']) ? (int)base64_decode($_GET['id']) : 0;
+// Obtener ID y desencriptar
+$id = isset($_GET['id']) ? decryptId($_GET['id']) : 0;
 
-if ($id <= 0) {
+if ($id === false || $id <= 0) {
     die('Pago no válido');
 }
 
@@ -33,6 +34,11 @@ $payment = $stmt->fetch();
 if (!$payment) {
     die('Pago no encontrado');
 }
+
+// Registrar vista en logs de auditoría
+logAudit($conn, 'view', 'excluded_payments', $id, 'excluded_payments', null, [
+    'invoice_number' => $payment['invoice_number']
+]);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -285,17 +291,75 @@ if (!$payment) {
             background: #f0f0f0;
         }
         
-        /* Print Styles */
+        /* Print Styles (MODIFICACIÓN: Garantiza que toda la factura se imprima en una sola página Carta con colores idénticos a la pantalla) */
         @media print {
             body {
                 background: white;
+                font-size: 9.5pt !important;
+                line-height: 1.3 !important;
+                -webkit-print-color-adjust: exact !important; /* Fuerza a Chrome, Edge y Safari a imprimir fondos e imágenes de fondo */
+                print-color-adjust: exact !important;         /* Fuerza a Firefox a imprimir fondos e imágenes de fondo */
+            }
+            
+            /* MODIFICACIÓN CLAVE: Fuerza a todos los elementos hijos a conservar sus colores, bordes y gradientes originales al imprimir */
+            body * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             
             .invoice-container {
-                margin: 0;
-                padding: 10mm;
-                box-shadow: none;
-                max-width: none;
+                margin: 0 !important;
+                padding: 6mm 10mm !important;
+                box-shadow: none !important;
+                max-width: none !important;
+                border: none !important;
+            }
+
+            .invoice-header {
+                margin-bottom: 10px !important;
+                padding-bottom: 8px !important;
+            }
+
+            .invoice-title {
+                font-size: 14pt !important;
+                padding: 6px 15px !important;
+                margin: 10px 0 !important;
+            }
+
+            .subject-section {
+                padding: 10px 12px !important;
+                margin: 10px 0 !important;
+            }
+
+            .services-table {
+                margin: 12px 0 !important;
+            }
+            
+            .services-table th, .services-table td {
+                padding: 6px 8px !important;
+            }
+
+            .amount-in-words {
+                padding: 6px 12px !important;
+                margin-bottom: 8px !important;
+                font-size: 9pt !important;
+            }
+
+            .totals-section {
+                margin: 10px 0 !important;
+            }
+
+            .totals-table tr td {
+                padding: 4px 8px !important;
+            }
+
+            .signature-section {
+                margin-top: 30px !important;
+            }
+
+            .invoice-footer {
+                margin-top: 25px !important;
+                padding-top: 8px !important;
             }
             
             .no-print {
@@ -303,7 +367,7 @@ if (!$payment) {
             }
             
             @page {
-                margin: 10mm;
+                margin: 8mm 10mm !important;
                 size: letter;
             }
         }
@@ -311,11 +375,12 @@ if (!$payment) {
 </head>
 <body>
     <!-- Print Button -->
+    <!-- Print Button (MODIFICACIÓN: El botón Cerrar ahora regresa a la pantalla anterior o al listado general) -->
     <div class="no-print">
         <button onclick="window.print()">
             <i class="bi bi-printer"></i> Imprimir Factura
         </button>
-        <button onclick="window.close()">
+        <button onclick="goBackOrClose()">
             <i class="bi bi-x-circle"></i> Cerrar
         </button>
     </div>
@@ -462,8 +527,18 @@ if (!$payment) {
     </div>
     
     <script>
-        // Auto-print on load (optional)
-        // window.onload = function() { window.print(); }
+        // MODIFICACIÓN: Función robusta en JavaScript para el botón Cerrar
+        // Si el usuario abrió la factura en una pestaña independiente, intenta cerrarla.
+        // De lo contrario, regresa exactamente a la pantalla donde estaba el usuario antes de entrar (historial del sujeto, etc.).
+        function goBackOrClose() {
+            if (document.referrer === "" || document.referrer.includes("print.php")) {
+                // Si no hay referrer (pestaña nueva) o venimos de sí misma, redirecciona al historial de pagos
+                window.location.href = "index.php";
+            } else {
+                // Regresa al historial o pantalla previa desde donde se hizo click
+                window.location.href = document.referrer;
+            }
+        }
     </script>
 </body>
 </html>

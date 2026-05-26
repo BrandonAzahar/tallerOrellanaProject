@@ -185,11 +185,11 @@ require_once __DIR__ . '/../../includes/header.php';
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="edit.php?id=<?php echo base64_encode($user['id']); ?>" class="btn btn-outline-warning" title="Editar">
+                                        <a href="edit.php?id=<?php echo encryptId($user['id']); ?>" class="btn btn-outline-warning" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <?php if ($user['id'] != getCurrentUserId()): ?>
-                                            <a href="toggle_status.php?id=<?php echo base64_encode($user['id']); ?>" 
+                                            <a href="toggle_status.php?id=<?php echo encryptId($user['id']); ?>" 
                                                class="btn btn-outline-<?php echo $user['status'] === 'active' ? 'secondary' : 'success'; ?>" 
                                                title="<?php echo $user['status'] === 'active' ? 'Desactivar' : 'Activar'; ?>">
                                                 <i class="bi bi-<?php echo $user['status'] === 'active' ? 'pause' : 'play'; ?>"></i>

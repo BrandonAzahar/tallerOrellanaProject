@@ -72,6 +72,10 @@ define('SESSION_NAME', 'ORELLANA_SESSION');
 // Costo del hash de contraseñas
 define('PASSWORD_COST', 10);
 
+// Clave de encriptación para IDs (cambiar en producción)
+// Generar con: bin2hex(random_bytes(32))
+define('ENCRYPTION_KEY', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2');
+
 // ============================================
 // FORMATOS
 // ============================================

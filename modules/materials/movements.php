@@ -12,7 +12,7 @@ $conn = getDbConnection();
 $errors = [];
 
 // Obtener material
-$materialId = isset($_GET['material']) ? (int)base64_decode($_GET['material']) : 0;
+$materialId = isset($_GET['material']) ? decryptId($_GET['material']) : 0;
 $material = null;
 
 if ($materialId > 0) {

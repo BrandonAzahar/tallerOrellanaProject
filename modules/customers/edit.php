@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../config/database.php';
 $conn = getDbConnection();
 $errors = [];
 
-$id = isset($_GET['id']) ? (int)base64_decode($_GET['id']) : 0;
+$id = isset($_GET['id']) ? decryptId($_GET['id']) : 0;
 $sql = "SELECT * FROM customers WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->execute([$id]);

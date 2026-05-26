@@ -20,6 +20,14 @@ $userData = getCurrentUserData();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle ?? 'Orellana - Sistema de Gestión'; ?></title>
     
+    <!-- 
+      MODIFICACIÓN: Integración de la fuente premium Google Fonts 'Outfit'
+      Esta tipografía eleva la estética del sistema aportando un estilo moderno y fluido.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -176,7 +184,7 @@ $userData = getCurrentUserData();
                     
                     <!-- Reportes -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?php echo strpos($_SERVER['PHP_SELF'], 'reports') !== false ? 'active' : ''; ?>"
+                        <a class="nav-link dropdown-toggle <?php echo strpos($_SERVER['PHP_SELF'], 'reports') !== false || strpos($_SERVER['PHP_SELF'], 'backup') !== false ? 'active' : ''; ?>"
                            href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-file-earmark-bar-graph me-1"></i>
                             <span class="d-none d-lg-inline">Reportes</span>
@@ -191,23 +199,33 @@ $userData = getCurrentUserData();
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>reports/materials_report.php">
                                 <i class="bi bi-box-seam me-2"></i>Stock Materiales
                             </a></li>
+                            <?php if (isAdmin()): ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>modules/backup/index.php">
+                                <i class="bi bi-hdd-stack me-2"></i>Respaldo y Exportación
+                            </a></li>
+                            <?php endif; ?>
                         </ul>
                     </li>
                     
                     <!-- Usuarios (Solo Admin) -->
                     <?php if (isAdmin()): ?>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?php echo strpos($_SERVER['PHP_SELF'], 'user_management') !== false ? 'active' : ''; ?>"
+                        <a class="nav-link dropdown-toggle <?php echo strpos($_SERVER['PHP_SELF'], 'user_management') !== false || strpos($_SERVER['PHP_SELF'], 'audit_logs') !== false ? 'active' : ''; ?>"
                            href="#" id="usersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-gear me-1"></i>
-                            <span class="d-none d-lg-inline">Usuarios</span>
+                            <span class="d-none d-lg-inline">Admin</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="usersDropdown">
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>modules/user_management/index.php">
-                                <i class="bi bi-list me-2"></i>Listado
+                                <i class="bi bi-list me-2"></i>Listado de Usuarios
                             </a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>modules/user_management/create.php">
                                 <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>modules/audit_logs/index.php">
+                                <i class="bi bi-journal-text me-2"></i>Logs de Auditoría
                             </a></li>
                         </ul>
                     </li>

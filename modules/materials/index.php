@@ -129,10 +129,10 @@ $categories = $conn->query($sql)->fetchAll(PDO::FETCH_COLUMN);
                                 <td><?php echo htmlspecialchars($mat['supplier'] ?? 'N/A'); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="edit.php?id=<?php echo base64_encode($mat['id']); ?>" class="btn btn-outline-warning">
+                                        <a href="edit.php?id=<?php echo encryptId($mat['id']); ?>" class="btn btn-outline-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="movements.php?material=<?php echo base64_encode($mat['id']); ?>" class="btn btn-outline-info">
+                                        <a href="movements.php?material=<?php echo encryptId($mat['id']); ?>" class="btn btn-outline-info">
                                             <i class="bi bi-arrow-left-right"></i>
                                         </a>
                                     </div>

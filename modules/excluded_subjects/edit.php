@@ -6,15 +6,17 @@
 
 $pageTitle = 'Editar Sujeto Excluido - Orellana';
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/audit_utils.php';
 require_once __DIR__ . '/../../config/database.php';
 
 $conn = getDbConnection();
 $errors = [];
 
-// Obtener ID y decodificar
-$id = isset($_GET['id']) ? (int)base64_decode($_GET['id']) : 0;
+// Obtener ID y desencriptar
+$id = isset($_GET['id']) ? decryptId($_GET['id']) : 0;
 
-if ($id <= 0) {
+if ($id === false || $id <= 0) {
     setFlash('error', 'Sujeto no válido');
     header('Location: index.php');
     exit();
@@ -63,11 +65,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($errors)) {
             try {
-                $sql = "UPDATE excluded_subjects SET dui=?, nit=?, first_name=?, last_name=?, 
+                // Guardar valores antiguos para el log
+                $oldValues = [
+                    'dui' => $subject['dui'],
+                    'nit' => $subject['nit'],
+                    'first_name' => $subject['first_name'],
+                    'last_name' => $subject['last_name'],
+                    'phone' => $subject['phone'],
+                    'address' => $subject['address'],
+                    'occupation' => $subject['occupation'],
+                    'status' => $subject['status']
+                ];
+
+                $sql = "UPDATE excluded_subjects SET dui=?, nit=?, first_name=?, last_name=?,
                         phone=?, address=?, occupation=?, status=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute([$dui, $nit, $firstName, $lastName, $phone, $address, $occupation, $status, $id]);
-                
+
+                // Registrar en logs de auditoría
+                $newValues = [
+                    'dui' => $dui,
+                    'nit' => $nit,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'phone' => $phone,
+                    'address' => $address,
+                    'occupation' => $occupation,
+                    'status' => $status
+                ];
+                logAudit($conn, 'update', 'excluded_subjects', $id, 'excluded_subjects', $oldValues, $newValues);
+
                 setFlash('success', 'Sujeto excluido actualizado exitosamente');
                 header('Location: index.php');
                 exit();
@@ -141,19 +168,13 @@ $csrf_token = generateCsrfToken();
                            value="<?php echo htmlspecialchars($subject['phone'] ?? ''); ?>">
                 </div>
                 
+                <!-- Ocupación (MODIFICACIÓN: TextBox de texto libre convencional) -->
                 <div class="col-12 col-md-6">
                     <label for="occupation" class="form-label">Ocupación <span class="text-danger">*</span></label>
-                    <select class="form-select" id="occupation" name="occupation" required>
-                        <option value="">Seleccionar ocupación</option>
-                        <option value="soldador" <?php echo $subject['occupation'] === 'soldador' ? 'selected' : ''; ?>>Soldador</option>
-                        <option value="electricista" <?php echo $subject['occupation'] === 'electricista' ? 'selected' : ''; ?>>Electricista</option>
-                        <option value="albañil" <?php echo $subject['occupation'] === 'albañil' ? 'selected' : ''; ?>>Albañil</option>
-                        <option value="ayudante" <?php echo $subject['occupation'] === 'ayudante' ? 'selected' : ''; ?>>Ayudante</option>
-                        <option value="pintor" <?php echo $subject['occupation'] === 'pintor' ? 'selected' : ''; ?>>Pintor</option>
-                        <option value="carpintero" <?php echo $subject['occupation'] === 'carpintero' ? 'selected' : ''; ?>>Carpintero</option>
-                        <option value="plomer" <?php echo $subject['occupation'] === 'plomer' ? 'selected' : ''; ?>>Plomero</option>
-                        <option value="otro" <?php echo $subject['occupation'] === 'otro' ? 'selected' : ''; ?>>Otro</option>
-                    </select>
+                    <input type="text" class="form-control" id="occupation" name="occupation" 
+                           placeholder="ej: Soldador, Electricista, Albañil"
+                           value="<?php echo htmlspecialchars($subject['occupation'] ?? ''); ?>" required>
+                    <div class="invalid-feedback">La ocupación es obligatoria</div>
                 </div>
                 
                 <div class="col-12">

@@ -100,7 +100,7 @@ $customers = $stmt->fetchAll();
                                 <td><?php echo htmlspecialchars($cust['phone'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($cust['email'] ?? 'N/A'); ?></td>
                                 <td>
-                                    <a href="edit.php?id=<?php echo base64_encode($cust['id']); ?>" class="btn btn-sm btn-outline-warning">
+                                    <a href="edit.php?id=<?php echo encryptId($cust['id']); ?>" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                 </td>

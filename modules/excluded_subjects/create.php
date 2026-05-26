@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/audit_utils.php';
 require_once __DIR__ . '/../../config/database.php';
 
 $pageTitle = 'Nuevo Sujeto Excluido - Orellana';
@@ -62,6 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute([$dui, $nit, $firstName, $lastName, $phone, $address, $occupation, $status]);
+
+                $newId = $conn->lastInsertId();
+
+                // Registrar en logs de auditoría
+                logAudit($conn, 'create', 'excluded_subjects', $newId, 'excluded_subjects', null, [
+                    'dui' => $dui,
+                    'nit' => $nit,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'occupation' => $occupation
+                ]);
 
                 setFlash('success', 'Sujeto excluido registrado exitosamente');
                 header('Location: index.php');
@@ -145,20 +157,12 @@ require_once __DIR__ . '/../../includes/header.php';
                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
                 </div>
                 
-                <!-- Ocupación -->
+                <!-- Ocupación (MODIFICACIÓN: TextBox de texto libre convencional) -->
                 <div class="col-12 col-md-6">
                     <label for="occupation" class="form-label">Ocupación <span class="text-danger">*</span></label>
-                    <select class="form-select" id="occupation" name="occupation" required>
-                        <option value="">Seleccionar ocupación</option>
-                        <option value="soldador" <?php echo ($_POST['occupation'] ?? '') === 'soldador' ? 'selected' : ''; ?>>Soldador</option>
-                        <option value="electricista" <?php echo ($_POST['occupation'] ?? '') === 'electricista' ? 'selected' : ''; ?>>Electricista</option>
-                        <option value="albañil" <?php echo ($_POST['occupation'] ?? '') === 'albañil' ? 'selected' : ''; ?>>Albañil</option>
-                        <option value="ayudante" <?php echo ($_POST['occupation'] ?? '') === 'ayudante' ? 'selected' : ''; ?>>Ayudante</option>
-                        <option value="pintor" <?php echo ($_POST['occupation'] ?? '') === 'pintor' ? 'selected' : ''; ?>>Pintor</option>
-                        <option value="carpintero" <?php echo ($_POST['occupation'] ?? '') === 'carpintero' ? 'selected' : ''; ?>>Carpintero</option>
-                        <option value="plomer" <?php echo ($_POST['occupation'] ?? '') === 'plomer' ? 'selected' : ''; ?>>Plomero</option>
-                        <option value="otro" <?php echo ($_POST['occupation'] ?? '') === 'otro' ? 'selected' : ''; ?>>Otro</option>
-                    </select>
+                    <input type="text" class="form-control" id="occupation" name="occupation" 
+                           placeholder="ej: Soldador, Electricista, Albañil"
+                           value="<?php echo htmlspecialchars($_POST['occupation'] ?? ''); ?>" required>
                     <div class="invalid-feedback">La ocupación es obligatoria</div>
                 </div>
                 

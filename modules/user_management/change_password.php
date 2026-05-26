@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/helpers.php';
 
 $conn = getDbConnection();
 requireAdmin();
@@ -29,19 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($newPassword)) {
         setFlash('warning', 'La contraseña no puede estar vacía');
-        header('Location: edit.php?id=' . base64_encode($id));
+        header('Location: edit.php?id=' . encryptId($id));
         exit();
     }
-    
+
     if (strlen($newPassword) < 6) {
         setFlash('error', 'La contraseña debe tener al menos 6 caracteres');
-        header('Location: edit.php?id=' . base64_encode($id));
+        header('Location: edit.php?id=' . encryptId($id));
         exit();
     }
-    
+
     if ($newPassword !== $confirmPassword) {
         setFlash('error', 'Las contraseñas no coinciden');
-        header('Location: edit.php?id=' . base64_encode($id));
+        header('Location: edit.php?id=' . encryptId($id));
         exit();
     }
     

@@ -88,6 +88,12 @@ $csrf_token = generateCsrfToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Estructuras y Remodelaciones Orellana</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -96,7 +102,13 @@ $csrf_token = generateCsrfToken();
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            font-family: 'Outfit', sans-serif;
+            /* ANIMACIÓN: Fondo con gradiente dinámico en movimiento continuo (15 segundos) */
+            background: linear-gradient(-45deg, #12223a, #1e3a5f, #2d5a87, #1a2f4c);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            opacity: 1 !important; /* Evita parpadeo durante la carga del login */
+            overflow-x: hidden; /* MODIFICACIÓN RESPONSIVE: Evita scrollbars horizontales causados por animaciones en móviles */
         }
         .login-wrapper {
             flex: 1;
@@ -108,16 +120,21 @@ $csrf_token = generateCsrfToken();
         .login-card {
             background: white;
             border-radius: 1rem;
-            box-shadow: 0 1rem 3rem rgba(0,0,0,0.2);
+            box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.3);
             max-width: 420px;
             width: 100%;
             overflow: hidden;
+            /* ANIMACIÓN: Entrada elástica (slide-up) desde abajo con curva cubic-bezier premium */
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .login-header {
             background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
             color: white;
-            padding: 2rem;
+            padding: 2.5rem 2rem;
             text-align: center;
+            position: relative;
         }
         .login-logo {
             max-width: 120px;
@@ -126,9 +143,12 @@ $csrf_token = generateCsrfToken();
             background: white;
             border-radius: 50%;
             padding: 0.5rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            /* ANIMACIÓN: Efecto flotante lento (float) en el eje vertical (6 segundos infinite) */
+            animation: float 6s ease-in-out infinite;
         }
         .login-body {
-            padding: 2rem;
+            padding: 2.5rem 2rem;
         }
         .form-floating > label {
             color: #6c757d;
@@ -137,13 +157,25 @@ $csrf_token = generateCsrfToken();
             padding: 0.75rem;
             font-size: 1.1rem;
             font-weight: 500;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #254670 0%, #366c9f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(45, 90, 135, 0.3);
+        }
+        .btn-login:active {
+            transform: scale(0.98);
         }
         .footer-login {
-            background: #1a1a1a;
-            color: #aaa;
-            padding: 1rem;
+            background: #111;
+            color: #888;
+            padding: 1.25rem;
             text-align: center;
             font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
     </style>
 </head>
@@ -151,7 +183,7 @@ $csrf_token = generateCsrfToken();
     <div class="login-wrapper">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+                <div class="col-12 col-md-10 col-lg-8 col-xl-6 d-flex justify-content-center">
                     <div class="login-card">
                         <div class="login-header">
                             <?php if (file_exists(LOGO_PATH)): ?>
@@ -161,19 +193,19 @@ $csrf_token = generateCsrfToken();
                                     <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
                                 </div>
                             <?php endif; ?>
-                            <h4 class="mb-1">Estructuras y Remodelaciones Orellana</h4>
+                            <h4 class="mb-1 fw-bold">Estructuras y Remodelaciones Orellana</h4>
                             <p class="mb-0 opacity-75">Sistema de Gestión</p>
                         </div>
                         <div class="login-body">
                             <?php if ($success_message): ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <div class="alert alert-success alert-dismissible fade show animate-fade-in" role="alert">
                                     <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($success_message); ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             <?php endif; ?>
                             
                             <?php if ($error_message): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <div class="alert alert-danger alert-dismissible fade show animate-fade-in" role="alert">
                                     <i class="bi bi-exclamation-triangle me-2"></i><?php echo htmlspecialchars($error_message); ?>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
@@ -182,7 +214,7 @@ $csrf_token = generateCsrfToken();
                             <form method="POST" action="" autocomplete="off">
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                 
-                                <div class="form-floating mb-3">
+                                <div class="form-floating mb-3 animate-slide-up delay-1">
                                     <input type="text" 
                                            class="form-control <?php echo $error_message ? 'is-invalid' : ''; ?>" 
                                            id="username" 
@@ -197,7 +229,7 @@ $csrf_token = generateCsrfToken();
                                     <?php endif; ?>
                                 </div>
                                 
-                                <div class="form-floating mb-4">
+                                <div class="form-floating mb-4 animate-slide-up delay-2">
                                     <input type="password" 
                                            class="form-control <?php echo $error_message ? 'is-invalid' : ''; ?>" 
                                            id="password" 
@@ -207,12 +239,12 @@ $csrf_token = generateCsrfToken();
                                     <label for="password"><i class="bi bi-lock me-2"></i>Contraseña</label>
                                 </div>
                                 
-                                <button type="submit" class="btn btn-primary btn-login w-100">
+                                <button type="submit" class="btn btn-primary btn-login w-100 animate-slide-up delay-3">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
                                 </button>
                             </form>
                             
-                            <div class="text-center mt-4">
+                            <div class="text-center mt-4 animate-fade-in delay-4">
                                 <small class="text-muted">
                                     <i class="bi bi-shield-check me-1"></i>
                                     Sistema seguro y confidencial

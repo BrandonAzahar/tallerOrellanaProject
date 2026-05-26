@@ -12,7 +12,7 @@ $conn = getDbConnection();
 $errors = [];
 
 // Obtener herramienta si viene en URL
-$toolId = isset($_GET['tool']) ? (int)base64_decode($_GET['tool']) : 0;
+$toolId = isset($_GET['tool']) ? decryptId($_GET['tool']) : 0;
 
 // Obtener herramientas disponibles
 $sql = "SELECT * FROM tools WHERE current_status = 'available' ORDER BY name";

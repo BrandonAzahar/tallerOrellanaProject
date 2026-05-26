@@ -168,11 +168,11 @@ $counts = $conn->query($sqlCounts)->fetch();
                                 <td><?php echo htmlspecialchars($tool['location'] ?? 'N/A'); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="edit.php?id=<?php echo base64_encode($tool['id']); ?>" class="btn btn-outline-warning" title="Editar">
+                                        <a href="edit.php?id=<?php echo encryptId($tool['id']); ?>" class="btn btn-outline-warning" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <?php if ($tool['current_status'] === 'available'): ?>
-                                            <a href="../tool_loans/create.php?tool=<?php echo base64_encode($tool['id']); ?>" class="btn btn-outline-info" title="Prestar">
+                                            <a href="../tool_loans/create.php?tool=<?php echo encryptId($tool['id']); ?>" class="btn btn-outline-info" title="Prestar">
                                                 <i class="bi bi-hand-index-thumb"></i>
                                             </a>
                                         <?php endif; ?>

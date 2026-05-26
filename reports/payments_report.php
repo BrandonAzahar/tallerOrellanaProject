@@ -6,6 +6,7 @@
 
 $pageTitle = 'Reporte de Pagos - Orellana';
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../config/database.php';
 
 $conn = getDbConnection();
@@ -13,32 +14,48 @@ $conn = getDbConnection();
 // Filtros
 $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
 $dateTo = $_GET['date_to'] ?? date('Y-m-d');
-$subjectId = isset($_GET['subject']) ? (int)base64_decode($_GET['subject']) : 0;
+$subjectId = isset($_GET['subject']) ? decryptId($_GET['subject']) : 0;
 
 $whereClauses = ["ep.service_date BETWEEN ? AND ?"];
 $params = [$dateFrom, $dateTo];
 
-if ($subjectId > 0) {
+if ($subjectId !== false && $subjectId > 0) {
     $whereClauses[] = "ep.subject_id = ?";
     $params[] = $subjectId;
 }
 
 $whereClause = implode(' AND ', $whereClauses);
 
-// Obtener pagos
-$sql = "SELECT ep.*, 
+// ============================================
+// PAGINACIÓN
+// ============================================
+$page = max(1, (int)($_GET['page'] ?? 1));
+$pageSize = 20;
+
+// Contar total
+$sqlCount = "SELECT COUNT(*) as total FROM excluded_payments ep JOIN excluded_subjects es ON ep.subject_id = es.id WHERE {$whereClause}";
+$stmt = $conn->prepare($sqlCount);
+$stmt->execute($params);
+$totalRecords = $stmt->fetch()['total'];
+$totalPages = max(1, ceil($totalRecords / $pageSize));
+$page = max(1, min($page, $totalPages));
+$offset = ($page - 1) * $pageSize;
+
+// Obtener pagos paginados
+$sql = "SELECT ep.*,
                CONCAT(es.first_name, ' ', es.last_name) as subject_name,
                es.occupation, es.dui
         FROM excluded_payments ep
         JOIN excluded_subjects es ON ep.subject_id = es.id
         WHERE {$whereClause}
-        ORDER BY ep.service_date DESC";
+        ORDER BY ep.service_date DESC
+        LIMIT {$pageSize} OFFSET {$offset}";
 $stmt = $conn->prepare($sql);
 $stmt->execute($params);
 $payments = $stmt->fetchAll();
 
-// Totales
-$sqlTotals = "SELECT 
+// Totales (sin paginar - siempre muestra el total del período)
+$sqlTotals = "SELECT
               COUNT(*) as count,
               COALESCE(SUM(ep.gross_amount), 0) as total_gross,
               COALESCE(SUM(ep.withholding_tax), 0) as total_withheld,
@@ -53,6 +70,15 @@ $totals = $stmt->fetch();
 // Sujetos para filtro
 $sql = "SELECT id, CONCAT(first_name, ' ', last_name) as full_name FROM excluded_subjects WHERE status = 'active' ORDER BY last_name";
 $subjects = $conn->query($sql)->fetchAll();
+
+// Helper para construir URL de paginación
+function buildReportUrl($page, $dateFrom, $dateTo, $subjectId) {
+    $url = "?page={$page}&date_from=" . urlencode($dateFrom) . "&date_to=" . urlencode($dateTo);
+    if ($subjectId > 0) {
+        $url .= "&subject=" . encryptId($subjectId);
+    }
+    return $url;
+}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -79,7 +105,7 @@ $subjects = $conn->query($sql)->fetchAll();
                 <select class="form-select" name="subject">
                     <option value="0">Todos</option>
                     <?php foreach ($subjects as $subj): ?>
-                        <option value="<?php echo base64_encode($subj['id']); ?>" <?php echo $subjectId == $subj['id'] ? 'selected' : ''; ?>>
+                        <option value="<?php echo encryptId($subj['id']); ?>" <?php echo $subjectId == $subj['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($subj['full_name']); ?>
                         </option>
                     <?php endforeach; ?>
@@ -163,6 +189,34 @@ $subjects = $conn->query($sql)->fetchAll();
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginación -->
+            <?php if ($totalPages > 1): ?>
+                <div class="card-footer no-print">
+                    <nav aria-label="Paginación">
+                        <ul class="pagination pagination-sm mb-0 justify-content-center">
+                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="<?php echo buildReportUrl($page - 1, $dateFrom, $dateTo, $subjectId !== false ? $subjectId : 0); ?>">
+                                    <i class="bi bi-chevron-left"></i> Anterior
+                                </a>
+                            </li>
+                            <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                                    <a class="page-link" href="<?php echo buildReportUrl($i, $dateFrom, $dateTo, $subjectId !== false ? $subjectId : 0); ?>">
+                                        <?php echo $i; ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+                            <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="<?php echo buildReportUrl($page + 1, $dateFrom, $dateTo, $subjectId !== false ? $subjectId : 0); ?>">
+                                    Siguiente <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <small class="text-muted d-block text-center mt-2">Mostrando <?php echo count($payments); ?> de <?php echo number_format($totalRecords); ?> registros</small>
+                </div>
+            <?php endif; ?>
         <?php else: ?>
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-inbox" style="font-size: 4rem;"></i>

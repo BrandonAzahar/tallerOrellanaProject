@@ -380,8 +380,66 @@ function isDateGreater($date1, $date2) {
 }
 
 /**
+ * Encriptar ID numérico con HMAC + openssl para URLs seguras
+ * Reemplaza el base64 simple que es fácilmente decodificable
+ *
+ * @param int $id ID numérico a encriptar
+ * @return string ID encriptado (URL-safe base64)
+ */
+function encryptId($id) {
+    $id = (int)$id;
+    $key = defined('ENCRYPTION_KEY') ? ENCRYPTION_KEY : 'default-key-change-in-production';
+    $iv = random_bytes(16);
+    $encrypted = openssl_encrypt((string)$id, 'AES-256-CBC', $key, 0, $iv);
+    $combined = $iv . $encrypted;
+    return rtrim(strtr(base64_encode($combined), '+/', '-_'), '=');
+}
+
+/**
+ * Desencriptar ID encriptado con encryptId()
+ *
+ * @param string $encryptedId ID encriptado
+ * @return int|false ID original o false si falla
+ */
+function decryptId($encryptedId) {
+    try {
+        $key = defined('ENCRYPTION_KEY') ? ENCRYPTION_KEY : 'default-key-change-in-production';
+        $data = base64_decode(str_pad(strtr($encryptedId, '-_', '+/'), strlen($encryptedId) % 4, '=', STR_PAD_RIGHT));
+        $iv = substr($data, 0, 16);
+        $encrypted = substr($data, 16);
+        $decrypted = openssl_decrypt($encrypted, 'AES-256-CBC', $key, 0, $iv);
+        return $decrypted !== false ? (int)$decrypted : false;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+/**
+ * Generar hash HMAC para verificación de integridad
+ *
+ * @param string $data Datos a hashear
+ * @return string Hash HMAC-SHA256
+ */
+function generateHmac($data) {
+    $key = defined('ENCRYPTION_KEY') ? ENCRYPTION_KEY : 'default-key-change-in-production';
+    return hash_hmac('sha256', $data, $key);
+}
+
+/**
+ * Verificar hash HMAC
+ *
+ * @param string $data Datos originales
+ * @param string $hmac Hash a verificar
+ * @return bool True si es válido
+ */
+function verifyHmac($data, $hmac) {
+    $expected = generateHmac($data);
+    return hash_equals($expected, $hmac);
+}
+
+/**
  * Formatear estado para visualización
- * 
+ *
  * @param string $status Estado
  * @return array ['class' => 'badge-class', 'label' => 'Label']
  */

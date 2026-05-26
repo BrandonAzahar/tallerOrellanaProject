@@ -16,7 +16,7 @@ requireAdmin();
 $errors = [];
 
 // Obtener ID
-$id = isset($_GET['id']) ? (int)base64_decode($_GET['id']) : 0;
+$id = isset($_GET['id']) ? decryptId($_GET['id']) : 0;
 
 if ($id <= 0) {
     setFlash('error', 'Usuario no válido');

@@ -15,7 +15,7 @@ $conn = getDbConnection();
 // ============================================
 $search = $_GET['search'] ?? '';
 $status = $_GET['status'] ?? 'all';
-$subject = isset($_GET['subject']) ? (int)base64_decode($_GET['subject']) : 0;
+$subject = isset($_GET['subject']) ? decryptId($_GET['subject']) : 0;
 $dateFrom = $_GET['date_from'] ?? '';
 $dateTo = $_GET['date_to'] ?? '';
 
@@ -229,11 +229,11 @@ $totals = $stmt->fetch();
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="print.php?id=<?php echo base64_encode($payment['id']); ?>" 
+                                        <a href="print.php?id=<?php echo encryptId($payment['id']); ?>"
                                            class="btn btn-outline-primary" target="_blank" title="Imprimir">
                                             <i class="bi bi-printer"></i>
                                         </a>
-                                        <a href="edit.php?id=<?php echo base64_encode($payment['id']); ?>" 
+                                        <a href="edit.php?id=<?php echo encryptId($payment['id']); ?>"
                                            class="btn btn-outline-warning" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>

@@ -6,14 +6,16 @@
 
 $pageTitle = 'Detalle del Sujeto - Orellana';
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/audit_utils.php';
 require_once __DIR__ . '/../../config/database.php';
 
 $conn = getDbConnection();
 
-// Obtener ID y decodificar
-$id = isset($_GET['id']) ? (int)base64_decode($_GET['id']) : 0;
+// Obtener ID y desencriptar
+$id = isset($_GET['id']) ? decryptId($_GET['id']) : 0;
 
-if ($id <= 0) {
+if ($id === false || $id <= 0) {
     setFlash('error', 'Sujeto no válido');
     header('Location: index.php');
     exit();
@@ -41,6 +43,12 @@ if (!$subject) {
     exit();
 }
 
+// Registrar vista en logs de auditoría
+logAudit($conn, 'view', 'excluded_subjects', $id, 'excluded_subjects', null, [
+    'first_name' => $subject['first_name'],
+    'last_name' => $subject['last_name']
+]);
+
 // Obtener historial de pagos
 $sql = "SELECT ep.*, u.full_name as created_by_name
         FROM excluded_payments ep
@@ -56,7 +64,7 @@ $payments = $stmt->fetchAll();
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-person-badge me-2"></i>Detalle del Sujeto Excluido</h2>
     <div class="btn-group">
-        <a href="edit.php?id=<?php echo base64_encode($id); ?>" class="btn btn-warning">
+        <a href="edit.php?id=<?php echo encryptId($id); ?>" class="btn btn-warning">
             <i class="bi bi-pencil me-2"></i>Editar
         </a>
         <a href="index.php" class="btn btn-outline-secondary">
@@ -126,7 +134,7 @@ $payments = $stmt->fetchAll();
         <div class="card h-100">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Resumen de Pagos</h5>
-                <a href="../excluded_payments/create.php?subject=<?php echo base64_encode($id); ?>" class="btn btn-sm btn-light">
+                <a href="../excluded_payments/create.php?subject=<?php echo encryptId($id); ?>" class="btn btn-sm btn-light">
                     <i class="bi bi-plus-circle me-1"></i>Nuevo Pago
                 </a>
             </div>
@@ -172,7 +180,7 @@ $payments = $stmt->fetchAll();
                                 <?php foreach ($payments as $payment): ?>
                                     <tr>
                                         <td>
-                                            <a href="../excluded_payments/print.php?id=<?php echo base64_encode($payment['id']); ?>" 
+                                            <a href="../excluded_payments/print.php?id=<?php echo encryptId($payment['id']); ?>" 
                                                target="_blank" class="text-decoration-none">
                                                 <?php echo htmlspecialchars($payment['invoice_number']); ?>
                                             </a>
@@ -200,7 +208,7 @@ $payments = $stmt->fetchAll();
                     
                     <?php if ($subject['payment_count'] > 20): ?>
                         <div class="text-center">
-                            <a href="../excluded_payments/index.php?subject=<?php echo base64_encode($id); ?>" class="btn btn-sm btn-outline-primary">
+                            <a href="../excluded_payments/index.php?subject=<?php echo encryptId($id); ?>" class="btn btn-sm btn-outline-primary">
                                 Ver todos los pagos <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>
@@ -209,7 +217,7 @@ $payments = $stmt->fetchAll();
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-inbox" style="font-size: 3rem;"></i>
                         <p class="mt-2">No hay pagos registrados</p>
-                        <a href="../excluded_payments/create.php?subject=<?php echo base64_encode($id); ?>" class="btn btn-sm btn-primary">
+                        <a href="../excluded_payments/create.php?subject=<?php echo encryptId($id); ?>" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-circle me-1"></i>Registrar Primer Pago
                         </a>
                     </div>

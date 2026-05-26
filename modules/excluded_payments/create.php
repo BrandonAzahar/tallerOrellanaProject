@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/audit_utils.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/correlation_utils.php';
 
@@ -14,7 +15,7 @@ $conn = getDbConnection();
 $errors = [];
 
 // Obtener sujeto excluido si viene en la URL
-$subjectId = isset($_GET['subject']) ? (int)base64_decode($_GET['subject']) : 0;
+$subjectId = isset($_GET['subject']) ? decryptId($_GET['subject']) : 0;
 
 // Obtener sujetos activos para el dropdown
 $sql = "SELECT id, CONCAT(first_name, ' ', last_name) as full_name, occupation
@@ -87,11 +88,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $paymentId = $conn->lastInsertId();
 
+                // Registrar en logs de auditoría
+                logAudit($conn, 'create', 'excluded_payments', $paymentId, 'excluded_payments', null, [
+                    'invoice_number' => $invoiceNumber,
+                    'subject_id' => $subjectId,
+                    'gross_amount' => $grossAmount,
+                    'net_amount' => $netAmount,
+                    'withholding_tax' => $withholdingTax
+                ]);
+
                 // Confirmar transacción
                 $conn->commit();
 
+                // MODIFICACIÓN: En lugar de redirigir directamente al formato de factura (impresión),
+                // guardamos el registro y redirigimos al listado general de pagos (historial)
                 setFlash('success', 'Pago registrado exitosamente. Factura: ' . $invoiceNumber);
-                header('Location: print.php?id=' . base64_encode($paymentId));
+                header('Location: index.php');
                 exit();
 
             } catch (Exception $e) {
@@ -173,13 +185,49 @@ require_once __DIR__ . '/../../includes/header.php';
                     </select>
                 </div>
                 
-                <!-- Período -->
-                <div class="col-12">
-                    <label for="period_description" class="form-label">Período del Servicio</label>
-                    <input type="text" class="form-control" id="period_description" name="period_description" 
-                           placeholder="ej: Quincena 1-15 enero 2026"
-                           value="<?php echo htmlspecialchars($periodDescription); ?>">
-                    <small class="text-muted">Descripción del período de servicio prestado</small>
+                <!-- Período de Servicio (Selectores Dinámicos de Front-End) -->
+                <!-- MODIFICACIÓN: Se reemplaza el campo de texto libre por selectores guiados de Período (quincenas/mes completo), Mes (abreviado) y Año -->
+                <div class="col-12 col-md-9">
+                    <label class="form-label d-block">Período del Servicio <span class="text-danger">*</span></label>
+                    <div class="row g-2">
+                        <!-- Selector de Quincena o Mes Completo -->
+                        <div class="col-12 col-md-4">
+                            <select class="form-select" id="select_period_part">
+                                <option value="Quincena 1-15">Primera Quincena (Días 1-15)</option>
+                                <option value="Quincena 16-31">Segunda Quincena (Días 16-31)</option>
+                                <option value="Quincena 16-30">Segunda Quincena (Días 16-30)</option>
+                                <option value="Mes completo">Mes Completo</option>
+                            </select>
+                        </div>
+                        <!-- Selector de Mes (abreviado a 3 letras según formato requerido) -->
+                        <div class="col-12 col-md-4">
+                            <select class="form-select" id="select_period_month">
+                                <option value="ene">Enero (ene)</option>
+                                <option value="feb">Febrero (feb)</option>
+                                <option value="mar">Marzo (mar)</option>
+                                <option value="abr">Abril (abr)</option>
+                                <option value="may">Mayo (may)</option>
+                                <option value="jun">Junio (jun)</option>
+                                <option value="jul">Julio (jul)</option>
+                                <option value="ago">Agosto (ago)</option>
+                                <option value="sep">Septiembre (sep)</option>
+                                <option value="oct">Octubre (oct)</option>
+                                <option value="nov">Noviembre (nov)</option>
+                                <option value="dic">Diciembre (dic)</option>
+                            </select>
+                        </div>
+                        <!-- Input de Año (MODIFICACIÓN: TextBox normal para mayor libertad de escritura) -->
+                        <div class="col-12 col-md-4">
+                            <input type="number" class="form-control" id="select_period_year" 
+                                   value="<?php echo date('Y'); ?>" min="2000" max="2100" placeholder="Año">
+                        </div>
+                    </div>
+                    <!-- Campo oculto que enviará la cadena formateada concatenada al backend (ej: "Quincena 1-15 may 2026") -->
+                    <input type="hidden" id="period_description" name="period_description" value="<?php echo htmlspecialchars($periodDescription); ?>">
+                    <!-- Vista previa en tiempo real para retroalimentación del usuario -->
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i> Período generado automáticamente: <strong id="period_preview" class="text-primary"><?php echo htmlspecialchars($periodDescription); ?></strong>
+                    </div>
                 </div>
                 
                 <!-- Descripción del Servicio -->
@@ -245,7 +293,7 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <script>
-// Cálculo automático de retención
+// MODIFICACIÓN: Cálculo automático de retención de renta del 10%
 document.getElementById('gross_amount').addEventListener('blur', function() {
     const grossAmount = parseFloat(this.value) || 0;
     const threshold = 462.00;
@@ -269,6 +317,98 @@ document.getElementById('gross_amount').addEventListener('blur', function() {
         message.textContent = 'No aplica retención (monto ≤ $462)';
         message.className = 'text-success small';
     }
+});
+
+// MODIFICACIÓN: Lógica de front-end para generar dinámicamente el período de pago
+// Esta función concatena los selectores de Quincena, Mes abreviado y Año en una sola cadena
+// para guardarla en la base de datos de manera limpia.
+document.addEventListener('DOMContentLoaded', function() {
+    const selectPart = document.getElementById('select_period_part');
+    const selectMonth = document.getElementById('select_period_month');
+    const selectYear = document.getElementById('select_period_year');
+    const periodDescription = document.getElementById('period_description');
+    const periodPreview = document.getElementById('period_preview');
+
+    // Abreviaciones de los meses de 3 letras en español (formato requerido, ej: "may")
+    const monthAbbrs = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    
+    // Autocompletado del período inicial basado en la fecha de hoy o la fecha del servicio seleccionada
+    const serviceDateInput = document.getElementById('service_date');
+
+    function autodetectPeriodFromDate(dateString) {
+        if (!dateString) return;
+        const dateParts = dateString.split('-');
+        if (dateParts.length !== 3) return;
+        
+        const yearStr = dateParts[0];
+        const monthIndex = parseInt(dateParts[1]) - 1;
+        const dayVal = parseInt(dateParts[2]);
+
+        // Autoseleccionar mes y año
+        selectMonth.value = monthAbbrs[monthIndex];
+        selectYear.value = yearStr;
+
+        // Determinar el último día de este mes en particular
+        const lastDay = new Date(parseInt(yearStr), monthIndex + 1, 0).getDate();
+        
+        // Actualizar dinámicamente la segunda opción (índice 1) para que se adapte al mes real
+        const formattedPart = `Quincena 16-${lastDay}`;
+        selectPart.options[1].value = formattedPart;
+        selectPart.options[1].textContent = `Segunda Quincena (Días 16-${lastDay})`;
+
+        // Autoseleccionar quincena según el día del servicio
+        if (dayVal <= 15) {
+            selectPart.value = 'Quincena 1-15';
+        } else {
+            // Si el mes tiene exactamente 30 días, autoselecciona la tercera opción estática (16-30)
+            if (lastDay === 30) {
+                selectPart.value = 'Quincena 16-30';
+            } else {
+                // De lo contrario, autoselecciona la opción dinámica (16-lastDay)
+                selectPart.value = formattedPart;
+            }
+        }
+        
+        updatePeriodValue();
+    }
+
+    // Función para concatenar los selectores y actualizar el valor oculto
+    function updatePeriodValue() {
+        const part = selectPart.value;
+        const month = selectMonth.value;
+        const year = selectYear.value;
+        
+        // Si el usuario cambia el mes/año y estaba seleccionada la opción dinámica (índice 1), la recalculamos
+        if (selectPart.selectedIndex === 1) {
+            const monthIndex = monthAbbrs.indexOf(month);
+            const yearVal = parseInt(year);
+            const lastDay = new Date(yearVal, monthIndex + 1, 0).getDate();
+            const formattedPart = `Quincena 16-${lastDay}`;
+            
+            selectPart.options[1].value = formattedPart;
+            selectPart.options[1].textContent = `Segunda Quincena (Días 16-${lastDay})`;
+            
+            periodDescription.value = `${formattedPart} ${month} ${year}`;
+        } else {
+            periodDescription.value = `${part} ${month} ${year}`;
+        }
+        
+        periodPreview.textContent = periodDescription.value;
+    }
+
+    // Detectar cambios en los selectores del período
+    selectPart.addEventListener('change', updatePeriodValue);
+    selectMonth.addEventListener('change', updatePeriodValue);
+    selectYear.addEventListener('change', updatePeriodValue);
+    selectYear.addEventListener('input', updatePeriodValue);
+
+    // Detectar si el usuario cambia la fecha de servicio, para re-sugerir el período ideal
+    serviceDateInput.addEventListener('change', function() {
+        autodetectPeriodFromDate(this.value);
+    });
+
+    // Inicializar autodetectando la fecha por defecto cargada
+    autodetectPeriodFromDate(serviceDateInput.value);
 });
 </script>
 

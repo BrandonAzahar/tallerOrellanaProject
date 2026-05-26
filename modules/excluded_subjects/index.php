@@ -176,15 +176,15 @@ $occupations = $conn->query($sql)->fetchAll(PDO::FETCH_COLUMN);
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="view.php?id=<?php echo encryptId($subject['id']); ?>" 
+                                        <a href="view.php?id=<?php echo encryptId($subject['id']); ?>"
                                            class="btn btn-outline-primary" title="Ver">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="edit.php?id=<?php echo encryptId($subject['id']); ?>" 
+                                        <a href="edit.php?id=<?php echo encryptId($subject['id']); ?>"
                                            class="btn btn-outline-warning" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="delete.php?id=<?php echo encryptId($subject['id']); ?>" 
+                                        <a href="delete.php?id=<?php echo encryptId($subject['id']); ?>"
                                            class="btn btn-outline-danger delete-btn" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </a>
@@ -242,11 +242,6 @@ $occupations = $conn->query($sql)->fetchAll(PDO::FETCH_COLUMN);
 </div>
 
 <script>
-// Función para encriptar ID (simple base64 para este ejemplo)
-function encryptId(id) {
-    return btoa(id);
-}
-
 // Confirmar eliminación
 document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', function(e) {

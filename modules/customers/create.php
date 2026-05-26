@@ -15,7 +15,7 @@ $customer = null;
 
 if (isset($_GET['id'])) {
     $isEdit = true;
-    $id = (int)base64_decode($_GET['id']);
+    $id = decryptId($_GET['id']);
     $sql = "SELECT * FROM customers WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->execute([$id]);
